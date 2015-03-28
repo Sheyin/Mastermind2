@@ -15,6 +15,10 @@
 int main() {
 	srand(time(0));
 	Mastermind game;		// starting game, initializes values
+	std::cout << "Welcome to Mastermind!" << std::endl;
+	std::cout << "--------------------------------------------------" << std::endl;
+	game.showRules();
+	std::cout << "To show these rules again, enter 'rules' at any time." << std::endl;
 	do {
 		game.guessPegs();
 	} while(game.inProgress());
@@ -26,7 +30,7 @@ int main() {
 // Default constructor: when board initially created, this generates a code
 // of 4 pegs and populates the array.
 Mastermind::Mastermind() {
-	turn = 1;
+	turn = 0;
 	std::string guessedCode[4] = {"", "", "", ""};
 	std::string results[4] = {"", "", "", ""};
 
@@ -48,8 +52,11 @@ Mastermind::Mastermind() {
 // guessPegs: this handles input from the user and processes a guess by the user
 //  Populates guessedCode[] with user input.
 void Mastermind::guessPegs() {
+    turn++;
 	std::string guess;
-	std::cout << "Turn #" << turn << ": " << std::endl;
+	std::cout << "\n--------------------------------------------------" << std::endl;
+	std::cout << "Turn #" << turn << ": ";
+	std::cout << "\n--------------------------------------------------" << std::endl;
 	std::cout << "Please select four colors." << std::endl;
 
 	for(int i = 0; i < 4; i++) {
@@ -57,13 +64,38 @@ void Mastermind::guessPegs() {
 		std::cin >> guess;
 		std::cin.ignore();
 
+		// show rules upon request
+		if (guess == "rules") {
+
+            showRules();
+
+            // to continue semi-seamlessly:
+            std::cout << "#" << i+1 << ": ";
+            std::cin >> guess;
+            std::cin.ignore();
+		}
+
+		// debug - cheat code
+		if (guess == "justtellmealready") {
+            std::cout << "You cheater.  Here: " << std::endl;
+            printArray(answer);
+            std::cout << std::endl;
+
+            // to continue semi-seamlessly:
+            std::cout << "#" << i+1 << ": ";
+            std::cin >> guess;
+            std::cin.ignore();
+		}
+
         while (isInvalidColor(guess)) {
             std::cout << guess << " is an invalid option.  Please select again." << std::endl;
             std::cin >> guess;
             std::cin.ignore();
         }
-        guessedCode[i] = guess;     // add to guess array after validation
+        guessedCode[i] = makeLower(guess);     // add to guess array after validation
 	}
+
+    std::cout << std::endl;
 
 	// now that guessed array is populated - compare guess with solution
 	resultsArray(guessedCode);		// populating results
@@ -86,29 +118,38 @@ void Mastermind::guessPegs() {
 //	results array should be generated fresh each time it is called
 //  result pegs should not correlate to position in array
 void Mastermind::resultsArray(std::string guessArray[]) {
-	// erase old results and make copy of solution to alter safely
+
 	std::string copyAnswer[4];
-	for (int i = 0; i < 4; i++) {
-		copyAnswer[i] = answer[i];
-		results[i] = "";
-	}
+	std::string copyGuess[4];
+	int resultsNum = 0;  // this iterates results array - should not correspond to position in solution
 
-	// loop to check for black pegs first (right color, right spot)
-	for (int i = 0; i < 4; i++) {
-		if (guessArray[i] == copyAnswer[i]) {
-			results[i] = "black";
-			copyAnswer[i] = "";
-		}
-	}
+    // erase old results and make copy of solution to alter safely
+    for (int i = 0; i < 4; i++) {
+        copyAnswer[i] = answer[i];
+        copyGuess[i] = guessArray[i];
+        results[i] = "";
+    }
 
-	// loop to check for white pegs (right color, wrong spot)
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			if (guessArray[i] == copyAnswer[j]) {
-				results[i] = "white";
-				copyAnswer[j] = "";
-			}
-		}
+    // loop to check for black pegs first (right color, right spot)
+    for (int i = 0; i < 4; i++) {
+        if (copyGuess[i] == copyAnswer[i]) {
+            results[resultsNum] = "black";
+            resultsNum++;
+            copyAnswer[i] = " ";    // these are to prevent counting
+            copyGuess[i] = "-";    // colors twice in black and white
+        }
+    }
+
+    // loop to check for white pegs (right color, wrong spot)
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (copyGuess[i] == copyAnswer[j]) {
+                results[resultsNum] = "white";
+                resultsNum++;
+                copyAnswer[j] = " ";    // these are to prevent counting
+                copyGuess[i] = "-";    // colors twice in black and white
+            }
+        }
 	}
 }
 
@@ -117,6 +158,7 @@ void Mastermind::printArray(std::string printMe[]) {
 	for(int i = 0; i < 4; i++) {
 		std::cout << std::setw(10) << printMe[i];
 	}
+	std::cout << std::endl;
 	return;
 }
 
@@ -129,7 +171,7 @@ bool Mastermind::inProgress() {
 		}
 	}
 
-	std::cout << "Congratulations!  You have cracked the code!" << std::endl;
+	std::cout << "Congratulations!  You have cracked the code in " << turn << " turns!" << std::endl;
 	return false;	// returns true only if each peg in results is black - solved
 }
 
@@ -138,18 +180,21 @@ bool Mastermind::inProgress() {
 //	returns true if invalid, returns false if valid.
 //	input should already be clear of non-alpha characters.
 bool Mastermind::isInvalidColor(std::string color) {
-    char cColor[color.length() + 1];
-    strcpy(cColor,color.c_str());
-
+    // Check for invalid characters
     for(int i = 0; i < color.length(); i++) {
         if (!isalpha(color.at(i))) {
-            std::cout << "Debug: Invalid character - " << color.at(i) << " - found." << std::endl;
             return true;
         }
     }
 
+    // Make lower case
+    color = makeLower(color);
+
+
+    // Check if it is an acceptable color
 	for(int i = 0; i < 6; i++) {
 		if (color == validColors[i]) {
+
 			return false;
 		}
     }
@@ -157,91 +202,64 @@ bool Mastermind::isInvalidColor(std::string color) {
 }
 
 
+// makeLower: Takes a string and returns it in all lower case.
+std::string Mastermind::makeLower(std::string original) {
+    char changed[original.length() + 1];
+    strcpy(changed,original.c_str());
+
+    for(int i = 0; i < original.length(); i++) {
+            changed[i] = tolower(changed[i]);
+        }
+        original = changed;
+    return original;
+}
+
+// showRules: Prints the rules of the game to the screen.
+void Mastermind::showRules() {
+    std::cout << std::endl;
+    std::cout << "The goal is to guess the 4-color code." << std::endl;
+    std::cout << "Enter the name of a color (red, orange, yellow, green, blue, purple)." << std::endl;
+    std::cout << "Duplicate colors are permissible. " << std::endl;
+    std::cout << "The program will give you feedback based on your guess." << std::endl;
+    std::cout << "Black indicates that you have the right color and right position." << std::endl;
+    std::cout << "White indicates that you have the right color, but it is in the wrong position." << std::endl;
+    std::cout << "The order of the results you see does not correlate to the order listed." << std::endl;
+    std::cout << "So if you see a black peg, it does not mean your first color is correct!" << std::endl;
+    std::cout << std::endl;
+    return;
+}
+
 // pretty much only used w/ constructor.
 // intToColor: changes int value (0 - 5) to a color string
 std::string Mastermind::intToColor(int number) {
 	switch(number) {
-		case 1: {
+		case 0: {
 			return validColors[0];
 			break;
 		}
-		case 2: {
+		case 1: {
 			return validColors[1];
 			break;
 		}
-		case 3: {
+		case 2: {
 			return validColors[2];
 			break;
 		}
-		case 4: {
+		case 3: {
 			return validColors[3];
 			break;
 		}
-		case 5: {
+		case 4: {
 			return validColors[4];
 			break;
 		}
-		case 6: {
+		case 5: {
 			return validColors[5];
 			break;
 		}
 		default: {	// shouldn't be used, ever, but just in case...
-			std::cout << "Debug: Invalid number choice!  Using a default color." << std::endl;
 			return validColors[0];
 			break;
 		}
 	}
 }
-
-/*
-// old stuff I'm tossing out:
-
-// dropSymbols: helper function.
-std::string Mastermind::dropSymbols(std::string guess) {
-	return dropSymbols(guess, guess.length());
-}
-
-// dropSymbols: removing non-alpha characters from the string.  I think.
-std::string Mastermind::dropSymbols(std::string guess, int length) {
-	// base case
-	if (length == 1) {
-		if (!isalpha(guess.at(0))) {
-			std::cout << "Debug: Invalid character found.  Dropping character." << std::endl;
-			return "";
-		}
-		else {
-			return guess.at(0);
-		}
-	}
-
-	else {
-		if (!isalpha(guess[length])) {
-			std::cout << "Debug: Invalid character found.  Dropping character." << std::endl;
-			return dropSymbols(guess, length - 1);
-		}
-		else {
-			return dropSymbols(guess, length - 1) + guess.at(length);
-		}
-	}
-}
-
-
-// lowerCase: helper function for lowerCase function of the same name.
-std::string Mastermind::lowerCase(std::string color) {
-	return lowerCase(color, color.length());
-}
-
-// lowerCase: Inspects each character of a string and recursively returns the lower case variant.
-//		Also checks if it is a letter, but that should be a separate function.
-std::string Mastermind::lowerCase(std::string color, int toCheck) {
-	char lowerCaseChar;
-	if (toCheck == 0) {
-		return tolower(color.at(0));
-	}
-	else {
-		lowerCaseChar = tolower(color[toCheck]);
-		return lowerCase(color, toCheck - 1) + lowerCaseChar;
-	}
-}
-
-*/
