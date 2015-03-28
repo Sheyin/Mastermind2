@@ -8,13 +8,13 @@ I originally wrote up <a href="https://github.com/Sheyin/Mastermind">a version o
 
 <b>Original goal:</b>
 - writing this in C++
-- having input validation
+- having input validation (since I failed to add that in the original version)
  
 <b>Challenges:</b>
 - working with strings is driving me up the wall
 
 <b>Current state:</b>
-- not quite compiling - I need to change how I was validating input.
+- not quite compiling - string validation was giving me problems since I was using certain functions wrong.
 - rather disorganized / duplicate code
 
 <b>Long term goals:</b>
