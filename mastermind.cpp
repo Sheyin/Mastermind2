@@ -10,6 +10,7 @@
 #include <string>       // string functions
 #include <cctype>       // character manipulation functions
 #include <iomanip>      // formatting options (setw, etc.)
+#include <cstring>      // c_string funtions
 
 int main() {
 	srand(time(0));
@@ -22,24 +23,45 @@ int main() {
 }
 
 
-// this handles input from the user and processes a guess by the user
+// Default constructor: when board initially created, this generates a code
+// of 4 pegs and populates the array.
+Mastermind::Mastermind() {
+	turn = 1;
+	std::string guessedCode[4] = {"", "", "", ""};
+	std::string results[4] = {"", "", "", ""};
+
+	// setting colors - maybe put back into header
+	    validColors[0] = "red";
+        validColors[1] = "orange";
+        validColors[2] = "yellow";
+        validColors[3] = "green";
+        validColors[4] = "blue";
+        validColors[5] = "purple";
+
+	for(int i = 0; i < 4; i++){
+		int randNum = rand() % 6;		// range: 0 - 5
+		answer[i] = intToColor(randNum);
+	}
+}
+
+
+// guessPegs: this handles input from the user and processes a guess by the user
+//  Populates guessedCode[] with user input.
 void Mastermind::guessPegs() {
 	std::string guess;
-	std::cout << "Please select four colors to guess the code." << std::endl;
+	std::cout << "Turn #" << turn << ": " << std::endl;
+	std::cout << "Please select four colors." << std::endl;
 
 	for(int i = 0; i < 4; i++) {
-		std::cout << "#" << i << ": ";
+		std::cout << "#" << i+1 << ": ";
 		std::cin >> guess;
 		std::cin.ignore();
 
-		guess = Mastermind::dropSymbols(guess);		// gets rid of any non-alpha characters
-		guess = Mastermind::lowerCase(guess);		// makes every character lower case
-
-		while (isInvalidColor(guess)) {
-			std::cout << guess << " is an invalid option.  Please select again." << std::endl;
-			std::cin >> guess;
-			std::cin.ignore();
-		}
+        while (isInvalidColor(guess)) {
+            std::cout << guess << " is an invalid option.  Please select again." << std::endl;
+            std::cin >> guess;
+            std::cin.ignore();
+        }
         guessedCode[i] = guess;     // add to guess array after validation
 	}
 
@@ -50,8 +72,10 @@ void Mastermind::guessPegs() {
 	std::cout << "Your guess:" << std::endl;
 	printArray(guessedCode);
 
-	std::cout << "Results:" << std::endl;
+	std::cout << "\nResults:" << std::endl;
 	printArray(results);
+
+	std::cout << std::endl;
 
 	return;
 }
@@ -60,6 +84,7 @@ void Mastermind::guessPegs() {
 // 	black: correct color, correct position
 //	white: correct color, incorrect position
 //	results array should be generated fresh each time it is called
+//  result pegs should not correlate to position in array
 void Mastermind::resultsArray(std::string guessArray[]) {
 	// erase old results and make copy of solution to alter safely
 	std::string copyAnswer[4];
@@ -100,13 +125,76 @@ void Mastermind::printArray(std::string printMe[]) {
 bool Mastermind::inProgress() {
 	for (int i = 0; i < 4; i++){
 		if (results[i] != "black") {
-			return false;
+			return true;
 		}
 	}
 
 	std::cout << "Congratulations!  You have cracked the code!" << std::endl;
-	return true;	// returns true only if each peg in results is black - solved
+	return false;	// returns true only if each peg in results is black - solved
 }
+
+
+// isInvalidColor: checks to see if user input is a valid color.
+//	returns true if invalid, returns false if valid.
+//	input should already be clear of non-alpha characters.
+bool Mastermind::isInvalidColor(std::string color) {
+    char cColor[color.length() + 1];
+    strcpy(cColor,color.c_str());
+
+    for(int i = 0; i < color.length(); i++) {
+        if (!isalpha(color.at(i))) {
+            std::cout << "Debug: Invalid character - " << color.at(i) << " - found." << std::endl;
+            return true;
+        }
+    }
+
+	for(int i = 0; i < 6; i++) {
+		if (color == validColors[i]) {
+			return false;
+		}
+    }
+	return true;
+}
+
+
+// pretty much only used w/ constructor.
+// intToColor: changes int value (0 - 5) to a color string
+std::string Mastermind::intToColor(int number) {
+	switch(number) {
+		case 1: {
+			return validColors[0];
+			break;
+		}
+		case 2: {
+			return validColors[1];
+			break;
+		}
+		case 3: {
+			return validColors[2];
+			break;
+		}
+		case 4: {
+			return validColors[3];
+			break;
+		}
+		case 5: {
+			return validColors[4];
+			break;
+		}
+		case 6: {
+			return validColors[5];
+			break;
+		}
+		default: {	// shouldn't be used, ever, but just in case...
+			std::cout << "Debug: Invalid number choice!  Using a default color." << std::endl;
+			return validColors[0];
+			break;
+		}
+	}
+}
+
+/*
+// old stuff I'm tossing out:
 
 // dropSymbols: helper function.
 std::string Mastermind::dropSymbols(std::string guess) {
@@ -156,74 +244,4 @@ std::string Mastermind::lowerCase(std::string color, int toCheck) {
 	}
 }
 
-
-// isInvalidColor: checks to see if user input is a valid color.
-//	returns true if invalid, returns false if valid.
-//	input should already be clear of non-alpha characters.
-bool Mastermind::isInvalidColor(std::string color) {
-	for(int i = 0; i < 6; i++) {
-		if (color == validColors[i]) {
-			return true;
-		}
-	}
-	return false;
-}
-
-// Default constructor: when board initially created, this generates a code
-// of 4 pegs and populates the array.
-Mastermind::Mastermind() {
-	turn = 0;
-	std::string guessedCode[4] = {"", "", "", ""};
-	std::string results[4] = {"", "", "", ""};
-
-    /*
-	// setting colors - maybe put back into header
-	    validColors[0] = "red";
-        validColors[1] = "orange";
-        validColors[2] = "yellow";
-        validColors[3] = "green";
-        validColors[4] = "blue";
-        validColors[5] = "purple";
-        */
-
-	for(int i = 0; i < 4; i++){
-		int randNum = rand() % 6;		// range: 0 - 5
-		answer[i] = intToColor(randNum);
-	}
-}
-
-// pretty much only used w/ constructor.
-// intToColor: changes int value (0 - 5) to a color string
-std::string Mastermind::intToColor(int number) {
-	switch(number) {
-		case 1: {
-			return validColors[0];
-			break;
-		}
-		case 2: {
-			return validColors[1];
-			break;
-		}
-		case 3: {
-			return validColors[2];
-			break;
-		}
-		case 4: {
-			return validColors[3];
-			break;
-		}
-		case 5: {
-			return validColors[4];
-			break;
-		}
-		case 6: {
-			return validColors[5];
-			break;
-		}
-		default: {	// shouldn't be used, ever, but just in case...
-			std::cout << "Debug: Invalid number choice!  Using a default color." << std::endl;
-			return validColors[0];
-			break;
-		}
-	}
-}
+*/
