@@ -4,7 +4,7 @@ This is a clone of <a href="http://en.wikipedia.org/wiki/Mastermind_(board_game)
 
 I originally wrote up <a href="https://github.com/Sheyin/Mastermind">a version of this in Java</a> when I was learning to program; this version is written in C++ after taking CS161 and (hopefully...?) a bit better.  I will probably have a working version by later this afternoon.
 
-<b>Not currently compiling</b> - I only wrote most of this up on post-it notes over a day or two, before realizing certain changes I made caused other complications.  I am still going through and fixing code written while I was half-awake!
+<b>Still buggy</b> - I am still going through and fixing code written while I was half-awake!  Compiling now, but I need to fix some logical errors.
 
 <b>Original goal:</b>
 - writing this in C++
@@ -14,7 +14,7 @@ I originally wrote up <a href="https://github.com/Sheyin/Mastermind">a version o
 - working with strings is driving me up the wall
 
 <b>Current state:</b>
-- not quite compiling - string validation was giving me problems since I was using certain functions wrong.
+- compiling now, but I noticed some errors in the handling of duplicates.
 - rather disorganized / duplicate code
 
 <b>Long term goals:</b>
