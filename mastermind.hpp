@@ -9,13 +9,16 @@ class Mastermind {
 		std::string answer[4];
 		std::string guessedCode[4];
 		std::string results[4];
+		bool duplicateColors;
 
 	public:
 	    Mastermind();       // default constructor
+	    Mastermind(bool allowDuplicates);       // used for alternate mode - no duplicate colors
 		std::string validColors[6];
 		std::string intToColor(int number);
 		void guessPegs();
 		bool inProgress();
+		bool checkDuplicate(std::string color);
 		bool isInvalidColor(std::string color);
 		void printArray(std::string printMe[]);
 		void showRules();

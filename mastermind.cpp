@@ -12,11 +12,13 @@
 #include <iomanip>      // formatting options (setw, etc.)
 #include <cstring>      // c_string funtions
 
+bool chooseMode();
+
 int main() {
 	srand(time(0));
-	Mastermind game;		// starting game, initializes values
 	std::cout << "Welcome to Mastermind!" << std::endl;
 	std::cout << "--------------------------------------------------" << std::endl;
+	Mastermind game = Mastermind(chooseMode());		// starting game, initializes values
 	game.showRules();
 	std::cout << "To show these rules again, enter 'rules' at any time." << std::endl;
 	do {
@@ -33,6 +35,7 @@ Mastermind::Mastermind() {
 	turn = 0;
 	std::string guessedCode[4] = {"", "", "", ""};
 	std::string results[4] = {"", "", "", ""};
+	duplicateColors = true;
 
 	// setting colors - maybe put back into header
 	    validColors[0] = "red";
@@ -48,6 +51,44 @@ Mastermind::Mastermind() {
 	}
 }
 
+
+// Alternate constructor: Like the default array but this prevents
+//      duplicate colors from being used in the result.
+Mastermind::Mastermind(bool allowDuplicates) {
+	turn = 0;
+	std::string guessedCode[4] = {"", "", "", ""};
+	std::string results[4] = {"", "", "", ""};
+	duplicateColors = allowDuplicates;
+
+	// setting colors - maybe put back into header
+	    validColors[0] = "red";
+        validColors[1] = "orange";
+        validColors[2] = "yellow";
+        validColors[3] = "green";
+        validColors[4] = "blue";
+        validColors[5] = "purple";
+
+	for(int i = 0; i < 4; i++){
+		int randNum = rand() % 6;		// range: 0 - 5
+
+		// if duplicates disallowed, check and reroll for valid color
+		if (!duplicateColors && i > 0) {
+		    //if duplicate found:
+            while (checkDuplicate(intToColor(randNum))) {
+                randNum++;
+                    if (randNum > 6) {
+                        randNum = 0;
+                    }
+            }
+            answer[i] = intToColor(randNum);
+        }
+
+        //if not a duplicate:
+        else {
+            answer[i] = intToColor(randNum);
+        }
+	}
+}
 
 // guessPegs: this handles input from the user and processes a guess by the user
 //  Populates guessedCode[] with user input.
@@ -176,6 +217,18 @@ bool Mastermind::inProgress() {
 }
 
 
+// checkDuplicate: checks if a color already exists in solution.
+bool Mastermind::checkDuplicate(std::string color) {
+    for(int i = 0; i < 4; i++) {
+        if (answer[i] == color) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 // isInvalidColor: checks to see if user input is a valid color.
 //	returns true if invalid, returns false if valid.
 //	input should already be clear of non-alpha characters.
@@ -229,6 +282,7 @@ void Mastermind::showRules() {
     return;
 }
 
+
 // pretty much only used w/ constructor.
 // intToColor: changes int value (0 - 5) to a color string
 std::string Mastermind::intToColor(int number) {
@@ -261,5 +315,25 @@ std::string Mastermind::intToColor(int number) {
 			return validColors[0];
 			break;
 		}
+	}
+}
+
+// chooseMode: Allows switching between duplicates / no duplicates allowed.
+bool chooseMode() {
+	char allowDuplicate;
+	std::cout << "Do you want to allow duplicate colors in this game?" << std::endl;
+	do {
+		std::cout << "Select (Y)es or (N)o: ";
+		std::cin >> allowDuplicate;
+	} while (allowDuplicate != 'Y' && allowDuplicate != 'y' && allowDuplicate != 'N' && allowDuplicate != 'n');
+
+	if (allowDuplicate == 'Y' || allowDuplicate == 'y') {
+		std::cout << "\nAllowing duplicate colors." << std::endl;
+		return true;
+	}
+
+	else {
+		std::cout << "\nDisallowing duplicate colors." << std::endl;
+		return false;
 	}
 }
